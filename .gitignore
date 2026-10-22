@@ -85,3 +85,12 @@ secrets/*
 
 # Mac files
 .DS_Store
+
+# Data files (never commit datasets)
+data/*
+!data/.gitkeep
+
+# MLflow tracking data (never commit experiment runs)
+mlflow.db
+mlruns/
+mlartifacts/
