@@ -25,4 +25,5 @@ package = false
 [dependency-groups]
 dev = [
     "ipykernel>=7.3.0",
+    "mlflow>=3.17.2",
 ]
