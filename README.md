@@ -87,7 +87,8 @@ The notebook code is also available as Python modules in [`src/modelling/`](src/
 | `training.py` | the final stacking ensemble, its training and evaluation |
 | `predicting.py` | loading the pickled model and predicting |
 | `utils.py` | pickling helpers |
-| `main.py` | training flow |
+| `main.py` | training flow (Prefect): load, clean, split, train, evaluate and save the model |
+| `deployment.py` | Prefect deployment that retrains the model every week |
 
 Train the final model (about 20 seconds, the dataset must be in `data/`, see above):
 
@@ -95,7 +96,31 @@ Train the final model (about 20 seconds, the dataset must be in `data/`, see abo
 uv run python src/modelling/main.py data/abalone.csv
 ```
 
-It prints the test metrics and pickles the whole pipeline (feature engineering, encoder and model) to `src/web_service/local_objects/model.pkl`, which is git-ignored. Run the tests with `uv run pytest`.
+It prints the test metrics and pickles the whole pipeline (feature engineering, encoder and model) to `src/web_service/local_objects/model.pkl`, which is git-ignored. The dataset path is optional and defaults to `data/abalone.csv`. Run the tests with `uv run pytest`.
+
+### 🔁 Tracking and Scheduling the Training with Prefect
+
+The training is a Prefect flow (`train-model`), and each of its steps is a Prefect task. Without a Prefect server, Prefect starts a temporary one for each run, so the command above works on its own. To keep the history of the runs and retrain the model automatically:
+
+1. **Start the Prefect server** in its own terminal, and open the Prefect UI at http://127.0.0.1:4200:
+   ```bash
+   uv run prefect server start
+   ```
+
+2. **Point Prefect to this server** (once, in another terminal):
+   ```bash
+   uv run prefect config set PREFECT_API_URL=http://127.0.0.1:4200/api
+   ```
+
+3. **Train the model**: the flow run and its tasks appear in the **Runs** page of the Prefect UI, with their logs (including the test metrics).
+   ```bash
+   uv run python src/modelling/main.py
+   ```
+
+4. **Start the weekly retraining** in its own terminal, and keep it running: it creates the `weekly-retraining` deployment, which retrains the model every Monday at 03:00 UTC. To retrain it right away, click **Run** on the deployment in the **Deployments** page of the Prefect UI, or run `uv run prefect deployment run 'train-model/weekly-retraining'`.
+   ```bash
+   uv run python src/modelling/deployment.py
+   ```
 
 ## 👥 Team
 
