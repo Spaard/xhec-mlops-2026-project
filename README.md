@@ -9,9 +9,10 @@
 
 ## 🎯 Project Overview
 
-Welcome to your MLOps project! In this hands-on project, you'll build a complete machine learning system to predict the age of abalone (a type of sea snail) using physical measurements instead of the traditional time-consuming method of counting shell rings under a microscope.
+This project predicts the age of abalones (a type of sea snail) from physical measurements, instead of the traditional time-consuming method of counting shell rings under a microscope. It turns a machine learning model into a production-ready system:
 
-**Your Mission**: Transform a simple ML model into a production-ready system with automated training, deployment, and prediction capabilities.
+- **Training pipeline**: a Prefect flow that cleans the data, trains the model and saves it, with a deployment that retrains it every week.
+- **Prediction API**: a FastAPI service with Pydantic input validation, packaged in a Docker container.
 
 ## 📊 About the Dataset
 
@@ -20,26 +21,49 @@ Traditionally, determining an abalone's age requires:
 2. Staining it
 3. Counting rings under a microscope (very time-consuming!)
 
-**Your Goal**: Use easier-to-obtain physical measurements (shell weight, diameter, etc.) to predict the age automatically.
+The model uses easier-to-obtain physical measurements (shell weight, diameter, etc.) to predict the number of rings; the age in years is the number of rings + 1.5.
 
-📥 **Download**: Get the dataset from the [Kaggle page](https://www.kaggle.com/datasets/rodolfomendes/abalone-dataset)
+📥 **Download**: get the dataset from the [Kaggle page](https://www.kaggle.com/datasets/rodolfomendes/abalone-dataset) (see [Running the Notebooks](#-running-the-notebooks) for a command line download).
 
+## 👥 Team
+
+| Name | Email | GitHub |
+|------|-------|--------|
+| Gaspard Baumelou | gaspard.baumelou@gmail.com | Spaard |
+| Leo Burtin | leo.burtin@hec.edu | leottawa |
+| Ayush Singh | ayush.singh@hec.edu | ayu5hsingh |
+| Ethan Ben Hamou | ethan.ben-hamou@polytechnique.edu | ethan-benhamou |
+
+## 🗂️ Project Structure
+
+```
+├── bin/run_services.sh       # starts the Prefect server and the API (used by Docker)
+├── data/                     # the dataset (git-ignored)
+├── Dockerfile.app            # Docker image of the API
+├── notebooks/                # EDA and modelling notebooks
+├── src/
+│   ├── modelling/            # training pipeline (Prefect flow and deployment)
+│   └── web_service/          # prediction API (FastAPI)
+│       └── local_objects/    # the trained model, model.pkl (git-ignored)
+└── tests/                    # unit tests (pytest)
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- GitHub account
-- [Kaggle account](https://www.kaggle.com/account/login?phase=startRegisterTab&returnUrl=%2F) (for dataset download)
 - Python 3.10 or 3.11
+- [uv](https://docs.astral.sh/uv/)
+- [Docker](https://docs.docker.com/get-docker/), to run the API in a container
 
-### Setup Steps
+### Setup
 
-1. **Fork this repository**
-   - ⚠️ **Important**: Uncheck "Copy the `main` branch only" to get all project branches
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Spaard/xhec-mlops-2026-project.git
+   cd xhec-mlops-2026-project
+   ```
 
-2. **Add your team members** as admins to your forked repository
-
-3. **Set up your development environment** (requires [uv](https://docs.astral.sh/uv/)):
+2. **Set up the development environment**:
    ```bash
    # Create the virtual environment and install app + dev dependencies
    uv sync
@@ -51,11 +75,12 @@ Traditionally, determining an abalone's age requires:
    uv run pre-commit install
    ```
 
-4. **Check your code locally** (the same checks run in CI on every push / PR):
+3. **Check the code locally** (the same checks run in CI on every push / PR):
    ```bash
    uv run pre-commit run --all-files
    uv run ruff check .
    uv run ruff format --check .
+   uv run pytest
    ```
 
 ## 📓 Running the Notebooks
@@ -96,7 +121,7 @@ Train the final model (about 20 seconds, the dataset must be in `data/`, see abo
 uv run python src/modelling/main.py data/abalone.csv
 ```
 
-It prints the test metrics and pickles the whole pipeline (feature engineering, encoder and model) to `src/web_service/local_objects/model.pkl`, which is git-ignored. The dataset path is optional and defaults to `data/abalone.csv`. Run the tests with `uv run pytest`.
+It prints the test metrics and pickles the whole pipeline (feature engineering, encoder and model) to `src/web_service/local_objects/model.pkl`, which is git-ignored. The dataset path is optional and defaults to `data/abalone.csv`.
 
 ### 🔁 Tracking and Scheduling the Training with Prefect
 
@@ -122,158 +147,57 @@ The training is a Prefect flow (`train-model`), and each of its steps is a Prefe
    uv run python src/modelling/deployment.py
    ```
 
-## 👥 Team
+## 🌐 Prediction API
 
-| Name | Email | GitHub |
-|------|-------|--------|
-| Gaspard Baumelou | gaspard.baumelou@gmail.com | Spaard |
-| Leo Burtin | leo.burtin@hec.edu | leottawa |
-| Ayush Singh | ayush.singh@hec.edu | ayu5hsingh |
-| Ethan Ben Hamou | ethan.ben-hamou@polytechnique.edu | ethan-benhamou |
+The API ([`src/web_service/`](src/web_service/)) loads the trained model when it starts and exposes two routes:
 
-## 📋 What You'll Build
+| Route | Description |
+|---|---|
+| `GET /` | health check |
+| `POST /predict` | predicts the number of rings and the age of one or several abalones (up to 1,000 per request) |
 
-By the end of this project, you'll have created:
+The inputs are validated with Pydantic: besides the types, the API rejects (HTTP 422) the measurements that no real abalone can have, with the same rules as the cleaning of the training data (a non-positive measurement, a `diameter` larger than the `length`, a part heavier than the whole abalone, or a `height` / `length` ratio outside [0.05, 0.6]). If no model has been trained, `/predict` returns HTTP 503.
 
-### 🤖 **Automated ML Pipeline**
-- Training workflows using Prefect
-- Automatic model retraining on schedule
-- Reproducible model and data processing
+**The model must be trained first** (see *Training the Model* above), so that `src/web_service/local_objects/model.pkl` exists.
 
-### 🌐 **Prediction API**
-- REST API for real-time predictions
-- Input validation with Pydantic
-- Docker containerization
+### 🐳 Running the API in Docker
 
-### 📊 **Production-Ready Code**
-- Clean, well-documented code
-- Automated testing and formatting
-- Proper error handling
+1. **Build the image** (the trained model is copied into it, so train the model before building):
+   ```bash
+   docker build -f Dockerfile.app -t abalone-api .
+   ```
 
-## 📝 How to Work on This Project
+2. **Run the container**. It starts the API on port 8001 and the Prefect server on port 4201, published on ports 8000 and 4200 of the host:
+   ```bash
+   docker run --rm -p 0.0.0.0:8000:8001 -p 0.0.0.0:4200:4201 abalone-api
+   ```
 
-### The Branch-by-Branch Approach
+3. **Use the API**: open the interactive documentation at http://localhost:8000/docs (click **Try it out** on `POST /predict`), or send a request:
+   ```bash
+   curl -X POST http://localhost:8000/predict \
+     -H "Content-Type: application/json" \
+     -d '{"abalones": [{"sex": "M", "length": 0.455, "diameter": 0.365, "height": 0.095, "whole_weight": 0.514, "shucked_weight": 0.2245, "viscera_weight": 0.101, "shell_weight": 0.15}]}'
+   ```
+   The response contains one prediction per abalone, in the order of the request:
+   ```json
+   {"predictions": [{"rings": 8.83, "age": 10.33}]}
+   ```
+   `sex` is `M` (male), `F` (female) or `I` (infant), and the measurements are in the units of the Kaggle dataset. The Prefect UI of the container is available at http://localhost:4200.
 
-This project is organized into numbered branches, each representing a step in building your MLOps system. Think of it like a guided tutorial where each branch teaches you something new!
-
-**Here's how it works**:
-
-1. **Each branch = One pull request** with specific tasks
-2. **Follow the numbers** (branch_0, branch_1, etc.) in order
-3. **Read the PR instructions** (PR_0.md, PR_1.md, etc.) before starting
-4. **Complete all TODOs** in that branch's code
-5. **Create a pull request** when done
-6. **Merge and move to the next branch**
-
-### Step-by-Step Workflow
-
-For each numbered branch:
+### Running the API without Docker
 
 ```bash
-# Switch to the branch
-git checkout branch_number_i
-
-# Get latest changes (except for branch_0)
-git pull origin main
-# Note: A VIM window might open - just type ":wq" to close it
-
-# Push your branch
-git push
+uv run uvicorn web_service.main:app --port 8001
 ```
 
-Then:
-1. 📖 Read the PR_i.md file carefully
-2. 💻 Complete all the TODOs in the code
-3. 🔧 Test your changes
-4. 📤 Open **ONE** pull request to your main branch
-5. ✅ Merge the pull request
-6. 🔄 Move to the next branch
-
-> **💡 Pro Tip**: Always integrate your previous work when starting a new branch (except branch_0)!
-
-### 🔍 Understanding Pull Requests
-
-Pull Requests (PRs) are how you propose and review changes before merging them into your main codebase. They're essential for team collaboration!
-
-**Important**: When creating a PR, make sure you're merging into YOUR forked repository, not the original:
-
-❌ **Wrong** (merging to original repo):
-![PR Wrong](assets/PR_wrong.png)
-
-✅ **Correct** (merging to your fork):
-![PR Right](assets/PR_right.png)
+The API is then available at http://localhost:8001 (documentation at http://localhost:8001/docs).
 
 ## 💡 Development Tips
 
 ### Managing Dependencies
 
-Use uv to manage dependencies. Install or update packages with:
-
-```bash
-uv add <package>==<version>
-```
-
-Then sync the environment and regenerate the dependency files:
-
-```bash
-uv sync
-```
+Use uv to manage dependencies: `uv add <package>==<version>` adds an app dependency, and `uv add --dev <package>` a development one. Commit `pyproject.toml` and `uv.lock` together.
 
 ### Code Quality
-- The pre-commit hooks will automatically format your code
-- Remove all TODOs and unused code before final submission
-- Use clear variable names and add docstrings
-
-## 📊 Evaluation Criteria
-
-Your project will be evaluated on:
-
-### 🔍 **Code Quality**
-- Clean, readable code structure
-- Proper naming conventions
-- Good use of docstrings and type hints
-
-### 🎨 **Code Formatting**
-- Consistent style (automated with pre-commit)
-- Professional presentation
-
-### ⚙️ **Functionality**
-- Code runs without errors
-- All requirements implemented correctly
-
-### 📖 **Documentation & Reproducibility**
-- Clear README with setup instructions
-- Team member names and GitHub usernames
-- Step-by-step instructions to run everything
-
-### 🤝 **Collaboration**
-- Effective use of Pull Requests
-- Good teamwork and communication
-
----
-
-## 🎯 Final Deliverables Checklist
-
-When you're done, your repository should contain:
-
-✅ **Automated Training Pipeline**
-- [ ] Prefect workflows for model training
-- [ ] Separate modules for training and inference
-- [ ] Reproducible model and encoder generation
-
-✅ **Automated Deployment**
-- [ ] Prefect deployment for regular retraining
-
-✅ **Production API**
-- [ ] Working REST API for predictions
-- [ ] Pydantic input validation
-- [ ] Docker containerization
-
-✅ **Professional Documentation**
-- [ ] Updated README with team info
-- [ ] Clear setup and run instructions
-- [ ] All TODOs removed from code
-
----
-
-**Ready to start? Head to branch_0 and read PR_0.md for your first task! 🚀**
+- The pre-commit hooks automatically lint and format the code with ruff.
+- The CI ([`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)) runs ruff and the tests on Python 3.10 and 3.11 on every push and pull request.
