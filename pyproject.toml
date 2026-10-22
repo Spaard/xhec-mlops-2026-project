@@ -40,8 +40,8 @@ dev = [
   "scipy>=1.15.3",
 ]
 
-[tool.setuptools]
-packages = []
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 88
