@@ -45,7 +45,7 @@ Traditionally, determining an abalone's age requires:
    uv sync
 
    # Activate it (optional, `uv run <cmd>` works without)
-   source .venv/bin/activate   # on Windows: .venv\Scriptsctivate
+   source .venv/bin/activate   # on Windows: .venv\Scripts\activate
 
    # Install the pre-commit hooks (ruff lint + format, file checks, uv-lock)
    uv run pre-commit install
@@ -57,6 +57,25 @@ Traditionally, determining an abalone's age requires:
    uv run ruff check .
    uv run ruff format --check .
    ```
+
+## 📓 Running the Notebooks
+
+1. **Download the dataset** into the git-ignored `data/` folder. Kaggle's download link works without an account:
+   ```bash
+   curl -L -o data/abalone.zip https://www.kaggle.com/api/v1/datasets/download/rodolfomendes/abalone-dataset
+   unzip data/abalone.zip -d data && rm data/abalone.zip
+   ```
+
+2. **Open the notebooks** with the project's environment (`.venv`, created by `uv sync`) as the kernel, and run them from top to bottom:
+   - [`notebooks/eda.ipynb`](notebooks/eda.ipynb): exploratory data analysis of the dataset
+   - [`notebooks/modelling.ipynb`](notebooks/modelling.ipynb): model selection, final model and its analysis (takes about 5 minutes)
+
+3. **Browse the experiments** logged by the modelling notebook in the MLflow UI, then open http://127.0.0.1:5001 (port 5000 is often taken by AirPlay on macOS):
+   ```bash
+   cd notebooks
+   uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5001
+   ```
+   MLflow stores its data in `notebooks/mlflow.db` and `notebooks/mlruns/`, which are git-ignored.
 
 ## 👥 Team
 

@@ -23,6 +23,8 @@ dependencies = [
   "prefect>=3.0",
   "fastapi>=0.110",
   "uvicorn>=0.27",
+  "skrub>=0.10.1",
+  "numpy>=2.2.6",
 ]
 
 [dependency-groups]
@@ -31,6 +33,11 @@ dev = [
   "pre-commit>=3.5",
   "ruff>=0.5",
   "pytest>=8.0",
+  "matplotlib>=3.10.9",
+  "seaborn>=0.13.2",
+  "ipykernel>=7.3.0",
+  "mlflow>=3.17.2",
+  "scipy>=1.15.3",
 ]
 
 [tool.setuptools]
