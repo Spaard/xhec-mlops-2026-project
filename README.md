@@ -17,7 +17,7 @@ Welcome to your MLOps project! In this hands-on project, you'll build a complete
 
 Traditionally, determining an abalone's age requires:
 1. Cutting the shell through the cone
-2. Staining it 
+2. Staining it
 3. Counting rings under a microscope (very time-consuming!)
 
 **Your Goal**: Use easier-to-obtain physical measurements (shell weight, diameter, etc.) to predict the age automatically.
@@ -34,27 +34,108 @@ Traditionally, determining an abalone's age requires:
 
 ### Setup Steps
 
-1. **Fork this repository** 
+1. **Fork this repository**
    - ⚠️ **Important**: Uncheck "Copy the `main` branch only" to get all project branches
-   
+
 2. **Add your team members** as admins to your forked repository
 
-3. **Set up your development environment**:
+3. **Set up your development environment** (requires [uv](https://docs.astral.sh/uv/)):
    ```bash
-   # Create and activate a virtual environment
-   uv sync 
-   source venv/bin/activate # on Windows: venv\Scripts\activate
+   # Create the virtual environment and install app + dev dependencies
+   uv sync
 
-   # Install pre-commit hooks for code quality
-    uv pip install pre-commit
-    uv run pre-commit install
+   # Activate it (optional, `uv run <cmd>` works without)
+   source .venv/bin/activate   # on Windows: .venv\Scripts\activate
+
+   # Install the pre-commit hooks (ruff lint + format, file checks, uv-lock)
+   uv run pre-commit install
    ```
+
+4. **Check your code locally** (the same checks run in CI on every push / PR):
+   ```bash
+   uv run pre-commit run --all-files
+   uv run ruff check .
+   uv run ruff format --check .
+   ```
+
+## 📓 Running the Notebooks
+
+1. **Download the dataset** into the git-ignored `data/` folder. Kaggle's download link works without an account:
+   ```bash
+   curl -L -o data/abalone.zip https://www.kaggle.com/api/v1/datasets/download/rodolfomendes/abalone-dataset
+   unzip data/abalone.zip -d data && rm data/abalone.zip
+   ```
+
+2. **Open the notebooks** with the project's environment (`.venv`, created by `uv sync`) as the kernel, and run them from top to bottom:
+   - [`notebooks/eda.ipynb`](notebooks/eda.ipynb): exploratory data analysis of the dataset
+   - [`notebooks/modelling.ipynb`](notebooks/modelling.ipynb): model selection, final model and its analysis (takes about 5 minutes)
+
+3. **Browse the experiments** logged by the modelling notebook in the MLflow UI, then open http://127.0.0.1:5001 (port 5000 is often taken by AirPlay on macOS):
+   ```bash
+   cd notebooks
+   uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5001
+   ```
+   MLflow stores its data in `notebooks/mlflow.db` and `notebooks/mlruns/`, which are git-ignored.
+
+## 🏋️ Training the Model
+
+The notebook code is also available as Python modules in [`src/modelling/`](src/modelling/):
+
+| Module | Role |
+|---|---|
+| `preprocessing.py` | loading, cleaning, train/test split and feature engineering |
+| `training.py` | the final stacking ensemble, its training and evaluation |
+| `predicting.py` | loading the pickled model and predicting |
+| `utils.py` | pickling helpers |
+| `main.py` | training flow (Prefect): load, clean, split, train, evaluate and save the model |
+| `deployment.py` | Prefect deployment that retrains the model every week |
+
+Train the final model (about 20 seconds, the dataset must be in `data/`, see above):
+
+```bash
+uv run python src/modelling/main.py data/abalone.csv
+```
+
+It prints the test metrics and pickles the whole pipeline (feature engineering, encoder and model) to `src/web_service/local_objects/model.pkl`, which is git-ignored. The dataset path is optional and defaults to `data/abalone.csv`. Run the tests with `uv run pytest`.
+
+### 🔁 Tracking and Scheduling the Training with Prefect
+
+The training is a Prefect flow (`train-model`), and each of its steps is a Prefect task. Without a Prefect server, Prefect starts a temporary one for each run, so the command above works on its own. To keep the history of the runs and retrain the model automatically:
+
+1. **Start the Prefect server** in its own terminal, and open the Prefect UI at http://127.0.0.1:4200:
+   ```bash
+   uv run prefect server start
+   ```
+
+2. **Point Prefect to this server** (once, in another terminal):
+   ```bash
+   uv run prefect config set PREFECT_API_URL=http://127.0.0.1:4200/api
+   ```
+
+3. **Train the model**: the flow run and its tasks appear in the **Runs** page of the Prefect UI, with their logs (including the test metrics).
+   ```bash
+   uv run python src/modelling/main.py
+   ```
+
+4. **Start the weekly retraining** in its own terminal, and keep it running: it creates the `weekly-retraining` deployment, which retrains the model every Monday at 03:00 UTC. To retrain it right away, click **Run** on the deployment in the **Deployments** page of the Prefect UI, or run `uv run prefect deployment run 'train-model/weekly-retraining'`.
+   ```bash
+   uv run python src/modelling/deployment.py
+   ```
+
+## 👥 Team
+
+| Name | Email | GitHub |
+|------|-------|--------|
+| Gaspard Baumelou | gaspard.baumelou@gmail.com | Spaard |
+| Leo Burtin | leo.burtin@hec.edu | leottawa |
+| Ayush Singh | ayush.singh@hec.edu | ayu5hsingh |
+| Ethan Ben Hamou | ethan.ben-hamou@polytechnique.edu | ethan-benhamou |
 
 ## 📋 What You'll Build
 
 By the end of this project, you'll have created:
 
-### 🤖 **Automated ML Pipeline** 
+### 🤖 **Automated ML Pipeline**
 - Training workflows using Prefect
 - Automatic model retraining on schedule
 - Reproducible model and data processing
@@ -67,7 +148,7 @@ By the end of this project, you'll have created:
 ### 📊 **Production-Ready Code**
 - Clean, well-documented code
 - Automated testing and formatting
-- Proper error handling 
+- Proper error handling
 
 ## 📝 How to Work on This Project
 
@@ -102,7 +183,7 @@ git push
 
 Then:
 1. 📖 Read the PR_i.md file carefully
-2. 💻 Complete all the TODOs in the code  
+2. 💻 Complete all the TODOs in the code
 3. 🔧 Test your changes
 4. 📤 Open **ONE** pull request to your main branch
 5. ✅ Merge the pull request
@@ -147,16 +228,16 @@ uv sync
 
 Your project will be evaluated on:
 
-### 🔍 **Code Quality** 
+### 🔍 **Code Quality**
 - Clean, readable code structure
-- Proper naming conventions  
+- Proper naming conventions
 - Good use of docstrings and type hints
 
 ### 🎨 **Code Formatting**
 - Consistent style (automated with pre-commit)
 - Professional presentation
 
-### ⚙️ **Functionality** 
+### ⚙️ **Functionality**
 - Code runs without errors
 - All requirements implemented correctly
 
@@ -177,10 +258,10 @@ When you're done, your repository should contain:
 
 ✅ **Automated Training Pipeline**
 - [ ] Prefect workflows for model training
-- [ ] Separate modules for training and inference  
+- [ ] Separate modules for training and inference
 - [ ] Reproducible model and encoder generation
 
-✅ **Automated Deployment**  
+✅ **Automated Deployment**
 - [ ] Prefect deployment for regular retraining
 
 ✅ **Production API**
