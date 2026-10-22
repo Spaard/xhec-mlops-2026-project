@@ -64,6 +64,7 @@ Traditionally, determining an abalone's age requires:
 |------|-------|--------|
 | Gaspard Baumelou | gaspard.baumelou@gmail.com | <!-- TODO: GitHub username --> |
 | Leo Burtin | leo.burtin@hec.edu | leottawa |
+| Ayush Singh | ayush.singh@hec.edu | ayu5hsingh |
 | <!-- name --> | <!-- email --> | <!-- GitHub username --> |
 
 ## 📋 What You'll Build
