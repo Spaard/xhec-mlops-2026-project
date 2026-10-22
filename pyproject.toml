@@ -7,9 +7,9 @@ name = "xhec-mlops-project-student"
 version = "0.0.1"
 authors = [
   { name = "Gaspard Baumelou (Spaard)", email = "gaspard.baumelou@gmail.com" },
-  # Teammates: add your name and email below
   { name = "Leo Burtin", email = "leo.burtin@hec.edu" },
   { name = "Ayush Singh", email = "ayush.singh@hec.edu" },
+  { name = "Ethan Ben Hamou", email = "ethan.ben-hamou@polytechnique.edu" },
 ]
 description = "X-HEC MLOps Project on Abalone age prediction model"
 readme = "README.md"

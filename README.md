@@ -62,10 +62,10 @@ Traditionally, determining an abalone's age requires:
 
 | Name | Email | GitHub |
 |------|-------|--------|
-| Gaspard Baumelou | gaspard.baumelou@gmail.com | <!-- TODO: GitHub username --> |
+| Gaspard Baumelou | gaspard.baumelou@gmail.com | Spaard |
 | Leo Burtin | leo.burtin@hec.edu | leottawa |
 | Ayush Singh | ayush.singh@hec.edu | ayu5hsingh |
-| <!-- name --> | <!-- email --> | <!-- GitHub username --> |
+| Ethan Ben Hamou | ethan.ben-hamou@polytechnique.edu | ethan-benhamou |
 
 ## 📋 What You'll Build
 
