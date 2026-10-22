@@ -77,6 +77,26 @@ Traditionally, determining an abalone's age requires:
    ```
    MLflow stores its data in `notebooks/mlflow.db` and `notebooks/mlruns/`, which are git-ignored.
 
+## 🏋️ Training the Model
+
+The notebook code is also available as Python modules in [`src/modelling/`](src/modelling/):
+
+| Module | Role |
+|---|---|
+| `preprocessing.py` | loading, cleaning, train/test split and feature engineering |
+| `training.py` | the final stacking ensemble, its training and evaluation |
+| `predicting.py` | loading the pickled model and predicting |
+| `utils.py` | pickling helpers |
+| `main.py` | training flow |
+
+Train the final model (about 20 seconds, the dataset must be in `data/`, see above):
+
+```bash
+uv run python src/modelling/main.py data/abalone.csv
+```
+
+It prints the test metrics and pickles the whole pipeline (feature engineering, encoder and model) to `src/web_service/local_objects/model.pkl`, which is git-ignored. Run the tests with `uv run pytest`.
+
 ## 👥 Team
 
 | Name | Email | GitHub |
