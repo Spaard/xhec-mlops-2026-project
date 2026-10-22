@@ -10,5 +10,19 @@ authors = [
 ] # TODO: add authors here
 description = "X-HEC MLOps Project on Abalone age prediction model"
 requires-python = ">3.10" # TODO: update this version
+dependencies = [
+    "matplotlib>=3.10.9",
+    "pandas>=2.3.3",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
+]
 
 # TODO: add pydantic, pre-commit and ruff as a dependency
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+]
